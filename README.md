@@ -42,7 +42,9 @@ La aplicación sigue el patrón **MVVM (Model-View-ViewModel)** combinado con el
 
 1. Clonar el repositorio: `git clone https://github.com/juanperort-dev/WeatherApp-Pro.git`
 2. Abrir `WeatherApp.xcodeproj` en **Xcode 15+**.
-3. Asegurarse de tener configurado un equipo de desarrollo en *Signing & Capabilities* para el uso de WeatherKit.
+3. Crear un archivo `Config.xcconfig` y añadir `OPENWEATHER_API_KEY = YOUR_API_:KEY`.
+4. Configurar el target de la app en Info.plist `Key = API_KEY` y `Value = $(OPENWEATHER_API_KEY)`.
+5. Configurar en el target `Debug` y `Release` para que utilicen este nuevo archivo.
 
 ---
 
