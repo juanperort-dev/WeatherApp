@@ -10,7 +10,7 @@
 
 ## 🚀 Características Principales
 
-- **Pronóstico en Tiempo Real:** Datos precisos utilizando **WeatherKit**.
+- **Pronóstico en Tiempo Real:** Datos precisos utilizando **OpenWeather API**.
 - **Geolocalización:** Uso de **CoreLocation** para clima basado en la ubicación del usuario.
 - **Gráficos Avanzados:** Visualización de tendencias de temperatura con **Swift Charts**.
 - **Modo Offline:** Persistencia de datos local mediante **SwiftData**.
@@ -30,7 +30,7 @@ La aplicación sigue el patrón **MVVM (Model-View-ViewModel)** combinado con el
 
 - **Lenguaje:** Swift 6
 - **UI Framework:** SwiftUI
-- **Data:** WeatherKit, SwiftData, CoreLocation
+- **Data:** OpenWeather API, SwiftData, CoreLocation
 - **Tooling:** SwiftLint (Code Quality), Git (Version Control)
 
 ## 📸 Screenshots
