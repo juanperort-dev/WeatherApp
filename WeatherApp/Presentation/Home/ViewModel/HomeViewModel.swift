@@ -8,10 +8,9 @@
 import Foundation
 import Combine
 
-@MainActor // Asegura que las actualizaciones de UI ocurran en el hilo principal
+@MainActor
 class HomeViewModel: ObservableObject {
     
-    // El estado de la vista usando un Enum (Patrón muy valorado)
     enum State {
         case idle
         case loading
@@ -23,8 +22,8 @@ class HomeViewModel: ObservableObject {
     
     private let repository: WeatherRepositoryProtocol
     
-    init(repository: WeatherRepositoryProtocol = WeatherRepository()) {
-        self.repository = repository
+    init(repository: WeatherRepositoryProtocol? = nil) {
+        self.repository = repository ?? WeatherRepository()
     }
     
     func getCityWeather(city: String) async {

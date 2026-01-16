@@ -16,7 +16,7 @@ final class WeatherRepository: WeatherRepositoryProtocol {
     }
     
     func fetchCurrentWeather(for city: String) async throws -> Weather {
-        let urlString = "https://api.openweathermap.org/data/2.5/weather?q=\(city)&appid=\(apiKey)&units=metric"
+        let urlString = "https://api.openweathermap.org/data/2.5/weather?q=\(city)&appid=\(apiKey)&units=metric&lang=es"
         let url = URL(string: urlString)
         
         let dto: WeatherResponseDTO = try await networkManager.request(url: url)
@@ -24,7 +24,7 @@ final class WeatherRepository: WeatherRepositoryProtocol {
         return Weather(
             cityName: dto.name,
             temperature: dto.main.temp,
-            condition: dto.weather.first?.main ?? "Unknown",
+            condition: dto.weather.first?.description ?? "Unknown",
             conditionIcon: mapIcon(dto.weather.first?.icon ?? ""),
             humidity: dto.main.humidity,
             windSpeed: dto.wind.speed
