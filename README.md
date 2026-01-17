@@ -34,7 +34,13 @@ La aplicación sigue el patrón **MVVM (Model-View-ViewModel)** combinado con el
 - **Tooling:** SwiftLint (Code Quality), Git (Version Control)
 
 ## 📸 Screenshots
-*(Próximamente)*
+<p align="center">
+  <img
+    src="https://github.com/user-attachments/assets/38a6893c-a71e-4c24-9eb4-cd6cead107a1"
+    width="300"
+  />
+</p>
+
 
 ---
 
