@@ -56,6 +56,9 @@ struct HomeView: View {
             )
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .task {
+                await viewModel.loadInitialWeather()
+            }
             .searchable(
                 text: $searchText,
                 isPresented: $isSearching,

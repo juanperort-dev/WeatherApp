@@ -7,6 +7,8 @@
 
 import Foundation
 import Combine
+internal import _LocationEssentials
+internal import CoreLocation
 
 @MainActor
 class HomeViewModel: ObservableObject {
@@ -22,9 +24,54 @@ class HomeViewModel: ObservableObject {
     @Published var hourlyForecast: [ForecastItem] = []
     
     private let repository: WeatherRepositoryProtocol
+    private let locationManager = LocationManager()
     
     init(repository: WeatherRepositoryProtocol? = nil) {
         self.repository = repository ?? WeatherRepository()
+    }
+    
+    func loadInitialWeather() async {
+        state = .loading
+        locationManager.requestLocation()
+        
+        while true {
+            if let coords = locationManager.location {
+                await getWeatherForCoordinates(lat: coords.latitude, lon: coords.longitude)
+                return
+            }
+            
+            if locationManager.authorizationStatus == .denied || locationManager.authorizationStatus == .restricted {
+                await getCityWeather(city: "Madrid")
+                return
+            }
+            
+            try? await Task.sleep(nanoseconds: 500_000_000)
+        }
+    }
+    
+    func fetchLocalWeather() async {
+        locationManager.requestLocation()
+        
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
+        
+        if let coords = locationManager.location {
+            await getWeatherForCoordinates(lat: coords.latitude, lon: coords.longitude)
+        }
+    }
+    
+    private func getWeatherForCoordinates(lat: Double, lon: Double) async {
+        state = .loading
+        do {
+            async let weatherFetch = repository.fetchWeather(lat: lat, lon: lon)
+            async let forecastFetch = repository.fetchHourlyForecast(lat: lat, lon: lon)
+            
+            let (weather, forecast) = try await (weatherFetch, forecastFetch)
+            
+            self.hourlyForecast = forecast
+            self.state = .success(weather)
+        } catch {
+            state = .error("Error al obtener el clima local.")
+        }
     }
     
     func getCityWeather(city: String) async {
