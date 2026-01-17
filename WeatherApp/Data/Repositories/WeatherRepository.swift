@@ -24,6 +24,8 @@ final class WeatherRepository: WeatherRepositoryProtocol {
         return Weather(
             cityName: dto.name,
             temperature: dto.main.temp,
+            tempMax: dto.main.tempMax,
+            tempMin: dto.main.tempMin,
             condition: dto.weather.first?.description ?? "Unknown",
             conditionIcon: mapIcon(dto.weather.first?.icon ?? ""),
             humidity: dto.main.humidity,
@@ -32,7 +34,24 @@ final class WeatherRepository: WeatherRepositoryProtocol {
     }
     
     func fetchWeather(lat: Double, lon: Double) async throws -> Weather {
-        fatalError("Implementar después")
+        let urlString = "https://api.openweathermap.org/data/2.5/weather?lat=\(lat)&lon=\(lon)&appid=\(apiKey)&units=metric&lang=es"
+        
+        guard let url = URL(string: urlString) else {
+            throw NetworkError.invalidURL
+        }
+        
+        let dto: WeatherResponseDTO = try await networkManager.request(url: url)
+        
+        return Weather(
+            cityName: dto.name,
+            temperature: dto.main.temp,
+            tempMax: dto.main.tempMax,
+            tempMin: dto.main.tempMin,
+            condition: dto.weather.first?.description ?? "Sin descripción",
+            conditionIcon: mapIcon(dto.weather.first?.icon ?? ""),
+            humidity: dto.main.humidity,
+            windSpeed: dto.wind.speed
+        )
     }
     
     private func mapIcon(_ iconCode: String) -> String {

@@ -16,6 +16,8 @@ struct WeatherResponseDTO: Decodable {
 
 struct MainDTO: Decodable {
     let temp: Double
+    let tempMax: Double
+    let tempMin: Double
     let humidity: Int
 }
 

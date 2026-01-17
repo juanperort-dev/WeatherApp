@@ -9,46 +9,75 @@ import SwiftUI
 
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
+    @State private var searchText: String = ""
+    @State private var isSearching = false
     
     var body: some View {
-        ZStack {
-            LinearGradient(colors: [.blue, .cyan.opacity(0.6)],
-                           startPoint: .topLeading,
-                           endPoint: .bottomTrailing)
-            .ignoresSafeArea()
-            
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 25) {
-                    switch viewModel.state {
-                    case .idle:
-                        Color.clear.onAppear {
-                            Task { await viewModel.getCityWeather(city: "Madrid") }
-                        }
-                    case .loading:
-                        ProgressView().tint(.white).padding(.top, 100)
-                        
-                    case .success(let weather):
-                        WeatherMainContent(weather: weather)
-                            .padding(.top, 40)
-                        
-                        VStack(spacing: 15) {
-                            HStack(spacing: 15) {
-                                WeatherDetailCard(title: "Humedad", value: "\(weather.humidity)%", icon: "humidity", color: .blue)
-                                WeatherDetailCard(title: "Viento", value: "\(Int(weather.windSpeed)) km/h", icon: "wind", color: .green)
-                            }
+        NavigationStack {
+            ScrollViewReader { proxy in
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 25) {
+                        switch viewModel.state {
+                        case .idle:
+                            ContentUnavailableView("Busca una ciudad", systemImage: "magnifyingglass")
+                                .foregroundColor(.white)
+                        case .loading:
+                            ProgressView().tint(.white).padding(.top, 100)
+                        case .success(let weather):
+                            WeatherMainContent(weather: weather)
+                                .padding(.top, 40)
                             
-                            HStack(spacing: 15) {
-                                WeatherDetailCard(title: "Sensación", value: "22°", icon: "thermometer.medium", color: .orange)
-                                WeatherDetailCard(title: "Visibilidad", value: "10 km", icon: "eye.fill", color: .purple)
+                            renderDetailCards(weather: weather)
+                                .padding(.horizontal)
+                                .padding(.bottom, 30)
+                            
+                        case .error(let message):
+                            Text(message).foregroundColor(.white).padding(.top, 100)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .background(
+                    LinearGradient(colors: [.blue, .cyan.opacity(0.6)],
+                                   startPoint: .topLeading,
+                                   endPoint: .bottomTrailing)
+                    .ignoresSafeArea()
+                )
+                .navigationTitle("")
+                .navigationBarTitleDisplayMode(.inline)
+                .searchable(
+                    text: $searchText,
+                    isPresented: $isSearching,
+                    placement: .navigationBarDrawer(displayMode: .automatic),
+                    prompt: "Buscar ciudad")
+                .onSubmit(of: .search) {
+                    if !searchText.isEmpty {
+                        isSearching = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                            withAnimation(.easeOut(duration: 0.25)) {
+                                proxy.scrollTo("TOP", anchor: .top)
                             }
                         }
-                        .padding(.horizontal)
-                        .padding(.bottom, 30)
-                        
-                    case .error(let message):
-                        Text(message).foregroundColor(.white).padding(.top, 100)
+                        Task {
+                            await viewModel.getCityWeather(city: searchText)
+                            searchText = ""
+                        }
                     }
                 }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private func renderDetailCards(weather: Weather) -> some View {
+        VStack(spacing: 15) {
+            HStack(spacing: 15) {
+                WeatherDetailCard(title: "Humedad", value: "\(weather.humidity)%", icon: "humidity", color: .blue)
+                WeatherDetailCard(title: "Viento", value: "\(Int(weather.windSpeed)) km/h", icon: "wind", color: .green)
+            }
+            HStack(spacing: 15) {
+                WeatherDetailCard(title: "Sensación", value: "22°", icon: "thermometer.medium", color: .orange)
+                WeatherDetailCard(title: "Visibilidad", value: "10 km", icon: "eye.fill", color: .purple)
             }
         }
     }
@@ -76,11 +105,14 @@ struct WeatherMainContent: View {
             Text(weather.condition.capitalized)
                 .font(.title2)
             
-            HStack(spacing: 40) {
-                WeatherDetailItem(icon: "humidity", value: "\(weather.humidity)%", label: "Humedad")
-                WeatherDetailItem(icon: "wind", value: "\(Int(weather.windSpeed)) km/h", label: "Viento")
+            HStack(spacing: 15) {
+                Text("Max: \(Int(weather.tempMax))°")
+                Text("|")
+                    .opacity(0.5)
+                Text("Min: \(Int(weather.tempMin))°")
             }
-            .padding(.top)
+            .font(.title3)
+            .fontWeight(.medium)
         }
         .foregroundColor(.white)
     }

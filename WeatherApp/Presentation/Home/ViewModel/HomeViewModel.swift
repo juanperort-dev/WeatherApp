@@ -27,13 +27,16 @@ class HomeViewModel: ObservableObject {
     }
     
     func getCityWeather(city: String) async {
+        guard !city.isEmpty else { return }
+        
         state = .loading
         
         do {
             let weather = try await repository.fetchCurrentWeather(for: city)
             state = .success(weather)
         } catch {
-            state = .error("No pudimos obtener el clima: \(error.localizedDescription)")
+            state = .error("No se encontró la ciudad '\(city)'")
         }
     }
+    
 }
