@@ -14,54 +14,51 @@ struct HomeView: View {
     
     var body: some View {
         NavigationStack {
-            ScrollViewReader { proxy in
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 25) {
-                        switch viewModel.state {
-                        case .idle:
-                            ContentUnavailableView("Busca una ciudad", systemImage: "magnifyingglass")
-                                .foregroundColor(.white)
-                        case .loading:
-                            ProgressView().tint(.white).padding(.top, 100)
-                        case .success(let weather):
-                            WeatherMainContent(weather: weather)
-                                .padding(.top, 40)
-                            
-                            renderDetailCards(weather: weather)
-                                .padding(.horizontal)
-                                .padding(.bottom, 30)
-                            
-                        case .error(let message):
-                            Text(message).foregroundColor(.white).padding(.top, 100)
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 25) {
+                    switch viewModel.state {
+                    case .idle:
+                        ContentUnavailableView("Busca una ciudad", systemImage: "magnifyingglass")
+                            .foregroundColor(.white)
+                    case .loading:
+                        ProgressView().tint(.white).padding(.top, 100)
+                    case .success(let weather):
+                        WeatherMainContent(weather: weather)
+                            .padding(.top, 40)
+                        
+                        if !viewModel.hourlyForecast.isEmpty {
+                            HourlyForecastView(forecastItems: viewModel.hourlyForecast)
+                                .padding(.vertical, 10)
                         }
+                        renderDetailCards(weather: weather)
+                            .padding(.horizontal)
+                            .padding(.bottom, 30)
+                        
+                    case .error(let message):
+                        Text(message).foregroundColor(.white).padding(.top, 100)
                     }
-                    .frame(maxWidth: .infinity)
                 }
-                .background(
-                    LinearGradient(colors: [.blue, .cyan.opacity(0.6)],
-                                   startPoint: .topLeading,
-                                   endPoint: .bottomTrailing)
-                    .ignoresSafeArea()
-                )
-                .navigationTitle("")
-                .navigationBarTitleDisplayMode(.inline)
-                .searchable(
-                    text: $searchText,
-                    isPresented: $isSearching,
-                    placement: .navigationBarDrawer(displayMode: .automatic),
-                    prompt: "Buscar ciudad")
-                .onSubmit(of: .search) {
-                    if !searchText.isEmpty {
-                        isSearching = false
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                            withAnimation(.easeOut(duration: 0.25)) {
-                                proxy.scrollTo("TOP", anchor: .top)
-                            }
-                        }
-                        Task {
-                            await viewModel.getCityWeather(city: searchText)
-                            searchText = ""
-                        }
+                .frame(maxWidth: .infinity)
+            }
+            .background(
+                LinearGradient(colors: [.blue, .cyan.opacity(0.6)],
+                               startPoint: .topLeading,
+                               endPoint: .bottomTrailing)
+                .ignoresSafeArea()
+            )
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .searchable(
+                text: $searchText,
+                isPresented: $isSearching,
+                placement: .navigationBarDrawer(displayMode: .automatic),
+                prompt: "Buscar ciudad")
+            .onSubmit(of: .search) {
+                if !searchText.isEmpty {
+                    isSearching = false
+                    Task {
+                        await viewModel.getCityWeather(city: searchText)
+                        searchText = ""
                     }
                 }
             }
@@ -134,26 +131,54 @@ struct WeatherDetailItem: View {
 
 // MARK: - Previews
 
-#Preview("Pantalla Completa") {
+// MARK: - Previews Senior Level
+
+#Preview("HomeView - Estados de Carga") {
+    // Estado Idle (Inicial)
     HomeView()
 }
 
-#Preview("Contenido Principal con Datos") {
+#Preview("HomeView - Éxito (Success)") {
+    // Nota: Para ver el estado de éxito sin llamar a la API real,
+    // lo ideal sería inyectar un ViewModel con el estado pre-cargado.
+    HomeView()
+}
+
+#Preview("Componentes - Main Content") {
     ZStack {
-        Color.blue.ignoresSafeArea()
-        WeatherMainContent(weather: .mock)
+        LinearGradient(colors: [.blue, .cyan], startPoint: .top, endPoint: .bottom)
+            .ignoresSafeArea()
+        
+        ScrollView {
+            VStack(spacing: 30) {
+                WeatherMainContent(weather: .mock)
+                
+                HourlyForecastView(forecastItems: ForecastItem.mockArray)
+                
+                HStack(spacing: 15) {
+                    WeatherDetailCard(title: "Humedad", value: "70%", icon: "humidity", color: .blue)
+                    WeatherDetailCard(title: "Viento", value: "15 km/h", icon: "wind", color: .green)
+                }
+                .padding(.horizontal)
+                HStack(spacing: 15) {
+                    WeatherDetailCard(title: "Sensación", value: "22°", icon: "thermometer.medium", color: .orange)
+                    WeatherDetailCard(title: "Visibilidad", value: "10 km", icon: "eye.fill", color: .purple)
+                }
+                .padding(.horizontal)
+            }
+        }
     }
 }
 
-#Preview("Tarjeta de Detalle Individual") {
-    ZStack {
-        Color.gray.ignoresSafeArea()
-        WeatherDetailCard(
-            title: "Humedad",
-            value: "\(Weather.mock.humidity)%",
-            icon: "humidity",
-            color: .blue
-        )
-        .padding()
+#Preview("Detail Cards - Variaciones") {
+    VStack(spacing: 20) {
+        WeatherDetailCard(title: "Humedad", value: "70%", icon: "humidity", color: .blue)
+        WeatherDetailCard(title: "Viento", value: "15 km/h", icon: "wind", color: .green)
+        WeatherDetailCard(title: "Sensación", value: "22°", icon: "thermometer.medium", color: .orange)
     }
+    .padding()
+    .background(LinearGradient(colors: [.blue, .cyan.opacity(0.6)],
+                               startPoint: .topLeading,
+                               endPoint: .bottomTrailing)
+        .ignoresSafeArea())
 }

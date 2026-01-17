@@ -19,3 +19,16 @@ extension Weather {
         windSpeed: 15.0
     )
 }
+
+extension ForecastItem {
+    static let mockArray = [
+        ForecastItem(hour: "12:00", temp: "22°", icon: "sun.max.fill"),
+        ForecastItem(hour: "15:00", temp: "24°", icon: "cloud.sun.fill"),
+        ForecastItem(hour: "18:00", temp: "20°", icon: "cloud.drizzle.fill"),
+        ForecastItem(hour: "21:00", temp: "18°", icon: "moon.stars.fill"),
+        ForecastItem(hour: "00:00", temp: "18°", icon: "moon.stars.fill"),
+        ForecastItem(hour: "03:00", temp: "16°", icon: "moon.stars.fill"),
+        ForecastItem(hour: "06:00", temp: "12°", icon: "moon.stars.fill"),
+        ForecastItem(hour: "09:00", temp: "14°", icon: "sun.max.fill")
+    ]
+}

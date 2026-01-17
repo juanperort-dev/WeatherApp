@@ -19,6 +19,7 @@ class HomeViewModel: ObservableObject {
     }
     
     @Published var state: State = .idle
+    @Published var hourlyForecast: [ForecastItem] = []
     
     private let repository: WeatherRepositoryProtocol
     
@@ -32,7 +33,12 @@ class HomeViewModel: ObservableObject {
         state = .loading
         
         do {
-            let weather = try await repository.fetchCurrentWeather(for: city)
+            async let weatherFetch = try await repository.fetchCurrentWeather(for: city)
+            async let forecastFetch = repository.fetchHourlyForecast(for: city)
+            
+            let (weather, forecast) = try await (weatherFetch, forecastFetch)
+            
+            self.hourlyForecast = forecast
             state = .success(weather)
         } catch {
             state = .error("No se encontró la ciudad '\(city)'")

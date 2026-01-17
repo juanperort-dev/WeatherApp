@@ -54,6 +54,25 @@ final class WeatherRepository: WeatherRepositoryProtocol {
         )
     }
     
+    func fetchHourlyForecast(for city: String) async throws -> [ForecastItem] {
+        let urlString = "https://api.openweathermap.org/data/2.5/forecast?q=\(city)&appid=\(apiKey)&units=metric&lang=es"
+        
+        guard let url = URL(string: urlString) else { throw NetworkError.invalidURL }
+        
+        let dto: WeatherForecastDTO = try await networkManager.request(url: url)
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        
+        return dto.list.prefix(8).map { item in
+            ForecastItem(
+                hour: formatter.string(from: item.date),
+                temp: "\(Int(item.main.temp))°",
+                icon: mapIcon(item.weather.first?.icon ?? "")
+            )
+        }
+    }
+    
     private func mapIcon(_ iconCode: String) -> String {
         switch iconCode {
         case "01d":

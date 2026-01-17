@@ -10,4 +10,5 @@ import Foundation
 protocol WeatherRepositoryProtocol {
     func fetchCurrentWeather(for city: String) async throws -> Weather
     func fetchWeather(lat: Double, lon: Double) async throws -> Weather
+    func fetchHourlyForecast(for city: String) async throws -> [ForecastItem]
 }
