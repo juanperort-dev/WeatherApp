@@ -46,3 +46,20 @@ class HomeViewModel: ObservableObject {
     }
     
 }
+
+// MARK: - Extensions
+
+extension HomeViewModel {
+    static func mockSuccess() -> HomeViewModel {
+        let vm = HomeViewModel()
+        vm.state = .success(.mock)
+        vm.hourlyForecast = ForecastItem.mockArray
+        return vm
+    }
+    
+    static func mockLoading() -> HomeViewModel {
+        let vm = HomeViewModel()
+        vm.state = .loading
+        return vm
+    }
+}

@@ -15,11 +15,6 @@ struct MainTabView: View {
                 .tabItem {
                     Label("Clima", systemImage: "cloud.sun.fill")
                 }
-            
-            Text("Búsqueda")
-                .tabItem {
-                    Label("Buscar", systemImage: "magnifyingglass")
-                }
         }
     }
 }

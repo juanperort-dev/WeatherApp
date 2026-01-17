@@ -8,9 +8,17 @@
 import SwiftUI
 
 struct HomeView: View {
-    @StateObject private var viewModel = HomeViewModel()
+    @StateObject private var viewModel: HomeViewModel
     @State private var searchText: String = ""
     @State private var isSearching = false
+    
+    init(viewModel: HomeViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
+    
+    init() {
+        self.init(viewModel: HomeViewModel())
+    }
     
     var body: some View {
         NavigationStack {
@@ -86,7 +94,7 @@ struct WeatherMainContent: View {
     let weather: Weather
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 10) {
             Text(weather.cityName)
                 .font(.system(size: 32, weight: .medium))
             
@@ -131,17 +139,12 @@ struct WeatherDetailItem: View {
 
 // MARK: - Previews
 
-// MARK: - Previews Senior Level
-
 #Preview("HomeView - Estados de Carga") {
-    // Estado Idle (Inicial)
     HomeView()
 }
 
 #Preview("HomeView - Éxito (Success)") {
-    // Nota: Para ver el estado de éxito sin llamar a la API real,
-    // lo ideal sería inyectar un ViewModel con el estado pre-cargado.
-    HomeView()
+    HomeView(viewModel: .mockSuccess())
 }
 
 #Preview("Componentes - Main Content") {
@@ -175,6 +178,7 @@ struct WeatherDetailItem: View {
         WeatherDetailCard(title: "Humedad", value: "70%", icon: "humidity", color: .blue)
         WeatherDetailCard(title: "Viento", value: "15 km/h", icon: "wind", color: .green)
         WeatherDetailCard(title: "Sensación", value: "22°", icon: "thermometer.medium", color: .orange)
+        WeatherDetailCard(title: "Visibilidad", value: "10 km", icon: "eye.fill", color: .purple)
     }
     .padding()
     .background(LinearGradient(colors: [.blue, .cyan.opacity(0.6)],
