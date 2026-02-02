@@ -11,6 +11,10 @@ import SwiftUI
 struct MainTabView: View {
     var body: some View {
         TabView {
+            HoursView()
+                .tabItem {
+                    Label("Horas", systemImage: "clock.fill")
+                }
             HomeView()
                 .tabItem {
                     Label("Clima", systemImage: "cloud.sun.fill")
