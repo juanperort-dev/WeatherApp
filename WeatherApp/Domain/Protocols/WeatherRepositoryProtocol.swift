@@ -12,4 +12,5 @@ protocol WeatherRepositoryProtocol {
     func fetchWeather(lat: Double, lon: Double) async throws -> Weather
     func fetchHourlyForecast(for city: String) async throws -> [ForecastItem]
     func fetchHourlyForecast(lat: Double, lon: Double) async throws -> [ForecastItem]
+    func fetchHourlyListForecast(for city: String) async throws -> [DailyGroup]
 }

@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct HomeView: View {
+    @EnvironmentObject var store: WeatherStore
     @StateObject private var viewModel: HomeViewModel
     @State private var searchText: String = ""
     @State private var isSearching = false
@@ -35,7 +36,7 @@ struct HomeView: View {
                             .padding(.top, 40)
                         
                         if !viewModel.hourlyForecast.isEmpty {
-                            HourlyForecastView(forecastItems: viewModel.hourlyForecast)
+                            HourlyForecastCard(forecastItems: viewModel.hourlyForecast)
                                 .padding(.vertical, 10)
                         }
                         renderDetailCards(weather: weather)
@@ -57,7 +58,12 @@ struct HomeView: View {
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .task {
-                await viewModel.loadInitialWeather()
+                await viewModel.getCityWeather(city: store.selectedCity)
+            }
+            .onChange(of: store.selectedCity) { newCity in
+                Task {
+                    await viewModel.getCityWeather(city: newCity)
+                }
             }
             .searchable(
                 text: $searchText,
@@ -66,11 +72,10 @@ struct HomeView: View {
                 prompt: "Buscar ciudad")
             .onSubmit(of: .search) {
                 if !searchText.isEmpty {
+                    let searched = searchText
+                    searchText = ""
                     isSearching = false
-                    Task {
-                        await viewModel.getCityWeather(city: searchText)
-                        searchText = ""
-                    }
+                    store.selectedCity = searched
                 }
             }
         }
@@ -159,7 +164,7 @@ struct WeatherDetailItem: View {
             VStack(spacing: 30) {
                 WeatherMainContent(weather: .mock)
                 
-                HourlyForecastView(forecastItems: ForecastItem.mockArray)
+                HourlyForecastCard(forecastItems: ForecastItem.mockArray)
                 
                 HStack(spacing: 15) {
                     WeatherDetailCard(title: "Humedad", value: "70%", icon: "humidity", color: .blue)

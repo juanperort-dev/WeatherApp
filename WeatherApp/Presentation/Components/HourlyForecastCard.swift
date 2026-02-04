@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct HourlyForecastView: View {
+struct HourlyForecastCard: View {
     let forecastItems: [ForecastItem]
     
     var body: some View {
@@ -57,7 +57,7 @@ struct HourlyForecastView: View {
         LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
             .ignoresSafeArea()
         
-        HourlyForecastView(forecastItems: [
+        HourlyForecastCard(forecastItems: [
             ForecastItem(hour: "Ahora", temp: "22°", icon: "cloud.sun.fill"),
             ForecastItem(hour: "14:00", temp: "23°", icon: "sun.max.fill"),
             ForecastItem(hour: "15:00", temp: "21°", icon: "cloud.fill"),

@@ -7,18 +7,36 @@
 
 import Foundation
 
-struct HourlyForecastItemDTO: Identifiable {
-    let id = UUID()
-    let time: Date
-    let temp: Double
-    let icon: String
-    let pop: Double
-    let rainAmount: Double
-    let windSpeed: Double
+struct HourlyForecastDTO: Decodable {
+    let list: [ForecastItemDTO]
 }
 
-struct DailyGroupDTO: Identifiable {
-    let id = UUID()
-    let date: String
-    let hours: [HourlyForecast]
+struct ForecastItemDTO: Decodable {
+    let dt: TimeInterval
+    let main: MainDTO
+    let weather: [WeatherDTO]
+    let wind: WindDTO
+    let pop: Double?
+    let rain: RainDTO?
+
+    struct MainDTO: Decodable {
+        let temp: Double
+    }
+
+    struct WeatherDTO: Decodable {
+        let icon: String
+        let description: String
+    }
+
+    struct WindDTO: Decodable {
+        let speed: Double
+    }
+
+    struct RainDTO: Decodable {
+        let threeHours: Double?
+
+        enum CodingKeys: String, CodingKey {
+            case threeHours = "3h"
+        }
+    }
 }

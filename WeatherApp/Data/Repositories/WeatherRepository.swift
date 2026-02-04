@@ -92,6 +92,45 @@ final class WeatherRepository: WeatherRepositoryProtocol {
         }
     }
     
+    func fetchHourlyListForecast(for city: String) async throws -> [DailyGroup] {
+        let urlString = "https://api.openweathermap.org/data/2.5/forecast?q=\(city)&appid=\(apiKey)&units=metric&lang=es"
+        guard let url = URL(string: urlString) else { throw NetworkError.invalidURL }
+        
+        let dto: HourlyForecastDTO = try await networkManager.request(url: url)
+        
+        let hourFormatter = DateFormatter()
+        hourFormatter.dateFormat = "HH:mm"
+        
+        let dayFormatter = DateFormatter()
+        dayFormatter.locale = Locale(identifier: "es_ES")
+        dayFormatter.dateFormat = "EEEE, d 'de' MMMM"
+        
+        var groupedDict: [String: [HourlyForecast]] = [:]
+        var dayOrder: [String] = []
+        
+        for item in dto.list {
+            let date = Date(timeIntervalSince1970: item.dt)
+            let dayName = dayFormatter.string(from: date).capitalized
+            
+            let hourModel = HourlyForecast(
+                time: hourFormatter.string(from: date),
+                temp: "\(Int(item.main.temp))°",
+                icon: mapIcon(item.weather.first?.icon ?? ""),
+                pop: "\(Int((item.pop ?? 0) * 100))%",
+                rainAmount: String(format: "%.1fmm", item.rain?.threeHours ?? 0.0),
+                windSpeed: "\(Int(item.wind.speed * 3.6)) km/h"
+            )
+            
+            if groupedDict[dayName] == nil {
+                dayOrder.append(dayName)
+                groupedDict[dayName] = []
+            }
+            groupedDict[dayName]?.append(hourModel)
+        }
+        
+        return dayOrder.map { DailyGroup(date: $0, hours: groupedDict[$0] ?? []) }
+    }
+    
     private func mapIcon(_ iconCode: String) -> String {
         switch iconCode {
         case "01d":

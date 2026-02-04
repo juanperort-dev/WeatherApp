@@ -30,32 +30,46 @@ class HomeViewModel: ObservableObject {
         self.repository = repository ?? WeatherRepository()
     }
     
-    func loadInitialWeather() async {
+    func loadWeather(for city: String) async {
+        if case .success(let current) = state, current.cityName.lowercased() == city.lowercased() {
+            return
+        }
+        
+        if city == "Madrid" && locationManager.location == nil {
+            await loadInitialLocationWeather()
+        } else {
+            await getCityWeather(city: city)
+        }
+    }
+    
+    private func loadInitialLocationWeather() async {
         state = .loading
         locationManager.requestLocation()
         
-        while true {
+        for _ in 0...4 {
             if let coords = locationManager.location {
                 await getWeatherForCoordinates(lat: coords.latitude, lon: coords.longitude)
                 return
             }
-            
-            if locationManager.authorizationStatus == .denied || locationManager.authorizationStatus == .restricted {
-                await getCityWeather(city: "Madrid")
-                return
-            }
-            
             try? await Task.sleep(nanoseconds: 500_000_000)
         }
+        
+        await getCityWeather(city: "Madrid")
     }
     
-    func fetchLocalWeather() async {
-        locationManager.requestLocation()
-        
-        try? await Task.sleep(nanoseconds: 1_000_000_000)
-        
-        if let coords = locationManager.location {
-            await getWeatherForCoordinates(lat: coords.latitude, lon: coords.longitude)
+    func getCityWeather(city: String) async {
+        guard !city.isEmpty else { return }
+        state = .loading
+        do {
+            async let weatherFetch = repository.fetchCurrentWeather(for: city)
+            async let forecastFetch = repository.fetchHourlyForecast(for: city)
+            
+            let (weather, forecast) = try await (weatherFetch, forecastFetch)
+            
+            self.hourlyForecast = forecast
+            self.state = .success(weather)
+        } catch {
+            state = .error("No se encontró la ciudad '\(city)'")
         }
     }
     
@@ -73,28 +87,9 @@ class HomeViewModel: ObservableObject {
             state = .error("Error al obtener el clima local.")
         }
     }
-    
-    func getCityWeather(city: String) async {
-        guard !city.isEmpty else { return }
-        
-        state = .loading
-        
-        do {
-            async let weatherFetch = try await repository.fetchCurrentWeather(for: city)
-            async let forecastFetch = repository.fetchHourlyForecast(for: city)
-            
-            let (weather, forecast) = try await (weatherFetch, forecastFetch)
-            
-            self.hourlyForecast = forecast
-            state = .success(weather)
-        } catch {
-            state = .error("No se encontró la ciudad '\(city)'")
-        }
-    }
-    
 }
 
-// MARK: - Extensions
+// MARK: Extensions
 
 extension HomeViewModel {
     static func mockSuccess() -> HomeViewModel {

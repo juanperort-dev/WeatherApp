@@ -8,10 +8,10 @@
 import Foundation
 
 struct WeatherForecastDTO: Decodable {
-    let list: [ForecastItemDTO]
+    let list: [HourlyDTO]
 }
 
-struct ForecastItemDTO: Decodable {
+struct HourlyDTO: Decodable {
     let dt: TimeInterval
     let main: MainDTO
     let weather: [WeatherDescriptionDTO]
