@@ -21,7 +21,7 @@ struct HourlyForecastList: View {
                         .font(.title3)
                         .frame(width: 40)
                     Text(item.temp)
-                        .font(.callout)
+                        .font(.callout).bold()
                     
                     VStack(alignment: .center, spacing: 5) {
                         HStack(spacing: 12) {
@@ -31,6 +31,7 @@ struct HourlyForecastList: View {
                         HourlyDataLabel(icon: "wind", value: item.windSpeed, iconColor: .white.opacity(0.7))
                     }
                     .frame(maxWidth: .infinity, alignment: .trailing)
+                    .bold()
                 }
                 .padding(.vertical, 10)
                 .padding(.horizontal, 15)
@@ -54,6 +55,7 @@ struct HourlyForecastList: View {
     
 }
 
+// MARK: - Previews
 #Preview {
     ZStack {
         LinearGradient(colors: [.blue, .cyan], startPoint: .top, endPoint: .bottom)

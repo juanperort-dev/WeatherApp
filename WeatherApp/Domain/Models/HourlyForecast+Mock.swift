@@ -20,3 +20,9 @@ extension HourlyForecast {
     ]
 }
 
+extension DailyGroup {
+    static let mockArray = [
+        DailyGroup(date: "05/02/2026", hours: HourlyForecast.mockArray)
+    ]
+}
+

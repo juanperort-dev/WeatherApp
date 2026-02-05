@@ -19,7 +19,7 @@ struct HourlyDataLabel: View {
                 .font(.caption)
             Text(value)
                 .font(.caption)
-                .foregroundColor(.black)
+                .foregroundColor(.white)
         }
     }
 }
@@ -29,4 +29,5 @@ struct HourlyDataLabel: View {
     HourlyDataLabel(icon: "cloud.fill", value: "5 ºC", iconColor: Color.blue)
     HourlyDataLabel(icon: "cloud.fill", value: "7 ºC", iconColor: Color.blue)
     HourlyDataLabel(icon: "cloud.fill", value: "6 ºC", iconColor: Color.blue)
+    
 }

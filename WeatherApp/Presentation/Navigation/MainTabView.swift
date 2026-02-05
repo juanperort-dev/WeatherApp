@@ -10,6 +10,7 @@ import SwiftUI
 
 struct MainTabView: View {
     @State private var selectedTab: Int = 2
+    let container: DependencyContainer
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -18,12 +19,12 @@ struct MainTabView: View {
                     Label("Días", systemImage: "calendar")
                 }
                 .tag(0)
-            HoursView()
+            HoursView(viewModel: container.makeHoursViewModel())
                 .tabItem {
                     Label("Horas", systemImage: "clock.fill")
                 }
                 .tag(1)
-            HomeView()
+            HomeView(viewModel: container.makeHomeViewModel())
                 .tabItem {
                     Label("Inicio", systemImage: "house.fill")
                 }

@@ -41,6 +41,7 @@ struct WeatherDetailCard: View {
     }
 }
 
+// MARK: - Previews
 #Preview {
     ZStack {
         Color.blue.ignoresSafeArea()

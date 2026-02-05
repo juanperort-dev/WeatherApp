@@ -9,12 +9,12 @@ import SwiftUI
 
 @main
 struct WeatherApp: App {
-    @StateObject private var weatherStore = WeatherStore()
+    let container = DependencyContainer()
     
     var body: some Scene {
         WindowGroup {
-            MainTabView()
-                .environmentObject(weatherStore)
+            MainTabView(container: container)
+                .environmentObject(container.weatherStore)
         }
     }
 }

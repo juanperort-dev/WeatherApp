@@ -15,8 +15,9 @@ struct HourlyDTO: Decodable {
     let dt: TimeInterval
     let main: MainDTO
     let weather: [WeatherDescriptionDTO]
+    let wind: WindDTO?
+    let pop: Double?
+    let rain: RainDTO?
     
-    var date: Date {
-        Date(timeIntervalSince1970: dt)
-    }
+    var date: Date { Date(timeIntervalSince1970: dt) }
 }

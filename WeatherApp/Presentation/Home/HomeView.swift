@@ -13,12 +13,9 @@ struct HomeView: View {
     @State private var searchText: String = ""
     @State private var isSearching = false
     
+    // MARK: - Initialization
     init(viewModel: HomeViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
-    }
-    
-    init() {
-        self.init(viewModel: HomeViewModel())
     }
     
     var body: some View {
@@ -27,58 +24,91 @@ struct HomeView: View {
                 VStack(spacing: 25) {
                     switch viewModel.state {
                     case .idle:
-                        ContentUnavailableView("Busca una ciudad", systemImage: "magnifyingglass")
-                            .foregroundColor(.white)
+                        idleView
                     case .loading:
-                        ProgressView().tint(.white).padding(.top, 100)
+                        loadingView
                     case .success(let weather):
-                        WeatherMainContent(weather: weather)
-                            .padding(.top, 40)
-                        
-                        if !viewModel.hourlyForecast.isEmpty {
-                            HourlyForecastCard(forecastItems: viewModel.hourlyForecast)
-                                .padding(.vertical, 10)
-                        }
-                        renderDetailCards(weather: weather)
-                            .padding(.horizontal)
-                            .padding(.bottom, 30)
-                        
+                        successContent(weather)
                     case .error(let message):
-                        Text(message).foregroundColor(.white).padding(.top, 100)
+                        errorView(message)
                     }
                 }
                 .frame(maxWidth: .infinity)
             }
-            .background(
-                LinearGradient(colors: [.blue, .cyan.opacity(0.6)],
-                               startPoint: .topLeading,
-                               endPoint: .bottomTrailing)
-                .ignoresSafeArea()
-            )
-            .navigationTitle("")
+            .background(backgroundGradient)
             .navigationBarTitleDisplayMode(.inline)
             .task {
-                await viewModel.getCityWeather(city: store.selectedCity)
+                await viewModel.loadWeather(for: store.selectedCity)
             }
             .onChange(of: store.selectedCity) { newCity in
-                Task {
-                    await viewModel.getCityWeather(city: newCity)
-                }
+                Task { await viewModel.loadWeather(for: newCity) }
             }
             .searchable(
                 text: $searchText,
                 isPresented: $isSearching,
-                placement: .navigationBarDrawer(displayMode: .automatic),
-                prompt: "Buscar ciudad")
+                prompt: "Buscar ciudad"
+            )
             .onSubmit(of: .search) {
-                if !searchText.isEmpty {
-                    let searched = searchText
-                    searchText = ""
-                    isSearching = false
-                    store.selectedCity = searched
-                }
+                handleSearchSubmit()
             }
         }
+    }
+}
+
+// MARK: - Private View Components
+private extension HomeView {
+    var backgroundGradient: some View {
+        LinearGradient(colors: [.blue, .cyan.opacity(0.6)],
+                       startPoint: .topLeading,
+                       endPoint: .bottomTrailing)
+        .ignoresSafeArea()
+    }
+    
+    var idleView: some View {
+        ContentUnavailableView("Busca una ciudad", systemImage: "magnifyingglass")
+            .foregroundColor(.white)
+            .padding(.top, 100)
+    }
+    
+    var loadingView: some View {
+        ProgressView()
+            .tint(.white)
+            .padding(.top, 100)
+    }
+    
+    func errorView(_ message: String) -> some View {
+        VStack(spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.largeTitle)
+            Text(message)
+                .multilineTextAlignment(.center)
+        }
+        .foregroundColor(.white)
+        .padding(.top, 100)
+        .padding(.horizontal)
+    }
+    
+    @ViewBuilder
+    func successContent(_ weather: Weather) -> some View {
+        WeatherMainContent(weather: weather)
+            .padding(.top, 40)
+        
+        if !viewModel.hourlyForecast.isEmpty {
+            HourlyForecastCard(forecastItems: viewModel.hourlyForecast)
+                .padding(.vertical, 10)
+        }
+        
+        renderDetailCards(weather: weather)
+            .padding(.horizontal)
+            .padding(.bottom, 30)
+    }
+    
+    func handleSearchSubmit() {
+        guard !searchText.isEmpty else { return }
+        let searched = searchText
+        searchText = ""
+        isSearching = false
+        store.selectedCity = searched
     }
     
     @ViewBuilder
@@ -96,8 +126,9 @@ struct HomeView: View {
     }
 }
 
-// MARK: - SubViews
 
+
+// MARK: - SubViews
 struct WeatherMainContent: View {
     let weather: Weather
     
@@ -146,13 +177,9 @@ struct WeatherDetailItem: View {
 }
 
 // MARK: - Previews
-
-#Preview("HomeView - Estados de Carga") {
-    HomeView()
-}
-
-#Preview("HomeView - Éxito (Success)") {
-    HomeView(viewModel: .mockSuccess())
+#Preview("Success") {
+    HomeView(viewModel: HomeViewModel.mockSuccess())
+        .environmentObject(WeatherStore())
 }
 
 #Preview("Componentes - Main Content") {
