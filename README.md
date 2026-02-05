@@ -30,7 +30,7 @@ La aplicación sigue el patrón **MVVM (Model-View-ViewModel)** combinado con el
 
 - **Lenguaje:** Swift 6
 - **UI Framework:** SwiftUI
-- **Data:** OpenWeather API, SwiftData, CoreLocation, Swift Charts
+- **Data:** OpenWeather API, SwiftData, CoreLocation, Swift Charts, WidgetKit
 - **Tooling:** SwiftLint (Code Quality), Git (Version Control)
 
 ## 📸 Screenshots
