@@ -9,5 +9,19 @@ import Foundation
 import Combine
 
 class WeatherStore: ObservableObject {
-    @Published var selectedCity: String = "Madrid"
+    private let selectedCityKey: String = "app.selected_city"
+    
+    @Published var selectedCity: String {
+        didSet {
+            UserDefaults.standard.set(selectedCity, forKey: selectedCityKey)
+        }
+    }
+    
+    init() {
+        self.selectedCity = UserDefaults.standard.string(forKey: selectedCityKey) ?? "Andorra"
+    }
+    
+    func selectCity(_ city: String) {
+        self.selectedCity = city
+    }
 }

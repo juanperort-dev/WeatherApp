@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct WeatherApp: App {
@@ -16,5 +17,6 @@ struct WeatherApp: App {
             MainTabView(container: container)
                 .environmentObject(container.weatherStore)
         }
+        .modelContainer(PersistenceContainer.shareModelContainer)
     }
 }
