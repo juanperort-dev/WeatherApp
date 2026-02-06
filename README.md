@@ -36,7 +36,11 @@ La aplicación sigue el patrón **MVVM (Model-View-ViewModel)** combinado con el
 ## 📸 Screenshots
 <p align="center">
   <img
-    src="https://github.com/user-attachments/assets/d23e5c25-32eb-4e02-b9e4-936e7ab9bdd3"
+    src="https://github.com/user-attachments/assets/2957876b-20bc-4a99-97e0-4e32870c7ab6"
+    width="300"
+  />
+  <img
+    src="https://github.com/user-attachments/assets/5f249b00-8f02-4b35-9810-aebf3cb374c5"
     width="300"
   />
 </p>
