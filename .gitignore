@@ -63,3 +63,5 @@ fastlane/test_output
 
 # xCode configurations files
 Config.xcconfig
+
+CLAUDE.md

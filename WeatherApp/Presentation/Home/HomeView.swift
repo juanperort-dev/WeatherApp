@@ -10,8 +10,13 @@ import SwiftUI
 struct HomeView: View {
     @EnvironmentObject var store: WeatherStore
     @StateObject private var viewModel: HomeViewModel
+    
     @State private var searchText: String = ""
-    @State private var isSearching = false
+    @State private var showCitySheet = false
+    @State private var scrollOffset: CGFloat = 0
+    @State private var lastScrollOffset: CGFloat = 0
+    @State private var toolbarVisible: Bool = true
+    @FocusState private var isSearchFocused: Bool
     
     // MARK: - Initialization
     init(viewModel: HomeViewModel) {
@@ -20,8 +25,20 @@ struct HomeView: View {
     
     var body: some View {
         NavigationStack {
-            ScrollView(showsIndicators: false) {
+            ScrollViewWithOffset(offset: $scrollOffset) {
                 VStack(spacing: 25) {
+                    VStack(spacing: 0) {
+                        HStack(spacing: 12) {
+                            searchBar
+                            cityButton
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                        .padding(.bottom, 16)
+                        .opacity(toolbarVisible ? 1 : 0)
+                        .animation(.easeInOut(duration: 0.25), value: toolbarVisible)
+                    }
+                    
                     switch viewModel.state {
                     case .idle:
                         idleView
@@ -37,19 +54,21 @@ struct HomeView: View {
             }
             .background(backgroundGradient)
             .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle("")
+            .toolbarBackground(.hidden, for: .navigationBar)
+            .sheet(isPresented: $showCitySheet) {
+                CitySelectionView()
+                    .presentationDetents([.medium, .large])
+                    .presentationDragIndicator(.visible)
+            }
             .task {
                 await viewModel.loadWeather(for: store.selectedCity)
             }
             .onChange(of: store.selectedCity) { newCity in
                 Task { await viewModel.loadWeather(for: newCity) }
             }
-            .searchable(
-                text: $searchText,
-                isPresented: $isSearching,
-                prompt: "Buscar ciudad"
-            )
-            .onSubmit(of: .search) {
-                handleSearchSubmit()
+            .onChange(of: scrollOffset) { newOffset in
+                handleScrollChange(newOffset)
             }
         }
     }
@@ -57,6 +76,58 @@ struct HomeView: View {
 
 // MARK: - Private View Components
 private extension HomeView {
+    var searchBar: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.secondary)
+                .font(.system(size: 17, weight: .regular))
+            
+            TextField("Buscar ciudad", text: $searchText)
+                .textFieldStyle(.plain)
+                .focused($isSearchFocused)
+                .submitLabel(.search)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.words)
+                .onSubmit {
+                    handleSearchSubmit()
+                }
+            
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 17, weight: .regular))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(.ultraThinMaterial)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.15), lineWidth: 0.5)
+        )
+        .frame(maxWidth: .infinity)
+    }
+    
+    var cityButton: some View {
+        Button {
+            showCitySheet = true
+        } label: {
+            Image(systemName: "list.bullet.circle.fill")
+                .symbolRenderingMode(.hierarchical)
+                .font(.system(size: 35))
+                .foregroundColor(.white)
+        }
+        .buttonStyle(.plain)
+    }
+    
     var backgroundGradient: some View {
         LinearGradient(colors: [.blue, .cyan.opacity(0.6)],
                        startPoint: .topLeading,
@@ -107,8 +178,25 @@ private extension HomeView {
         guard !searchText.isEmpty else { return }
         let searched = searchText
         searchText = ""
-        isSearching = false
+        isSearchFocused = false
         store.selectedCity = searched
+    }
+    
+    func handleScrollChange(_ newOffset: CGFloat) {
+        let threshold: CGFloat = 10
+        let delta = newOffset - lastScrollOffset
+        
+        if newOffset < 50 {
+            toolbarVisible = true
+        }
+        else if delta > threshold {
+            toolbarVisible = false
+        }
+        else if delta < -threshold {
+            toolbarVisible = true
+        }
+        
+        lastScrollOffset = newOffset
     }
     
     @ViewBuilder
@@ -126,6 +214,42 @@ private extension HomeView {
     }
 }
 
+// MARK: - Scroll Offset Tracking
+struct ScrollViewWithOffset<Content: View>: View {
+    @Binding var offset: CGFloat
+    let content: Content
+    
+    init(offset: Binding<CGFloat>, @ViewBuilder content: () -> Content) {
+        self._offset = offset
+        self.content = content()
+    }
+    
+    var body: some View {
+        ScrollView(showsIndicators: false) {
+            GeometryReader { geometry in
+                Color.clear.preference(
+                    key: ScrollOffsetPreferenceKey.self,
+                    value: geometry.frame(in: .named("scrollView")).minY
+                )
+            }
+            .frame(height: 0)
+            
+            content
+        }
+        .coordinateSpace(name: "scrollView")
+        .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
+            offset = -value
+        }
+    }
+}
+
+struct ScrollOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
 
 
 // MARK: - SubViews
@@ -220,4 +344,86 @@ struct WeatherDetailItem: View {
                                startPoint: .topLeading,
                                endPoint: .bottomTrailing)
         .ignoresSafeArea())
+}
+
+#Preview("Search Bar") {
+    ZStack {
+        LinearGradient(colors: [.blue, .cyan.opacity(0.6)],
+                       startPoint: .topLeading,
+                       endPoint: .bottomTrailing)
+            .ignoresSafeArea()
+        
+        VStack(spacing: 20) {
+            // Sin texto
+            HStack(spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 17, weight: .regular))
+                    
+                    Text("Buscar ciudad")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 17))
+                    
+                    Spacer()
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.15), lineWidth: 0.5)
+                )
+                
+                Button {} label: {
+                    Image(systemName: "list.bullet.circle.fill")
+                        .symbolRenderingMode(.hierarchical)
+                        .font(.system(size: 35))
+                        .foregroundColor(.white)
+                }
+            }
+            .padding(.horizontal, 16)
+            
+            // Con texto
+            HStack(spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 17, weight: .regular))
+                    
+                    Text("Madrid")
+                        .foregroundColor(.primary)
+                        .font(.system(size: 17))
+                    
+                    Spacer()
+                    
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 17, weight: .regular))
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.15), lineWidth: 0.5)
+                )
+                
+                Button {} label: {
+                    Image(systemName: "list.bullet.circle.fill")
+                        .symbolRenderingMode(.hierarchical)
+                        .font(.system(size: 35))
+                        .foregroundColor(.white)
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+        .padding(.top, 100)
+    }
 }
